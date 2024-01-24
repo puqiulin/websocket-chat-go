@@ -1,4 +1,6 @@
-package websocket_chat_go
+package main
+
+import "log"
 
 type Server struct {
 	clients    map[*Client]bool
@@ -19,14 +21,8 @@ func newServer() *Server {
 func (h *Server) run() {
 	for {
 		select {
-		case client := <-h.register:
-			h.clients[client] = true
-		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
-				close(client.send)
-			}
 		case message := <-h.broadcast:
+			log.Printf("Broadcast message: %s", message)
 			for client := range h.clients {
 				select {
 				case client.send <- message:
@@ -34,6 +30,15 @@ func (h *Server) run() {
 					close(client.send)
 					delete(h.clients, client)
 				}
+			}
+		case client := <-h.register:
+			log.Printf("New client connect: %s", client.conn.RemoteAddr())
+			h.clients[client] = true
+		case client := <-h.unregister:
+			log.Printf("Client disconnected: %s", client)
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
 			}
 		}
 	}
