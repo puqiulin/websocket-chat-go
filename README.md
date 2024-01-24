@@ -1,0 +1,1 @@
+# Simple websocket chat server based on [websocket](https://github.com/gorilla/websocket)
